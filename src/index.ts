@@ -12,6 +12,27 @@ const LOG_LEVEL = process.env.LOG_LEVEL ?? 'info';
 const USE_HTTP = process.env.USE_HTTP === 'true';
 const STATELESS = process.env.STATELESS === 'true';
 
+// Redirect console output to stderr when using stdio transport
+if (!USE_HTTP) {
+  const originalLog = console.log;
+  const originalError = console.error;
+  const originalWarn = console.warn;
+  const originalInfo = console.info;
+  
+  console.log = (...args: any[]) => {
+    process.stderr.write(`[LOG] ${args.join(' ')}\n`);
+  };
+  console.error = (...args: any[]) => {
+    process.stderr.write(`[ERROR] ${args.join(' ')}\n`);
+  };
+  console.warn = (...args: any[]) => {
+    process.stderr.write(`[WARN] ${args.join(' ')}\n`);
+  };
+  console.info = (...args: any[]) => {
+    process.stderr.write(`[INFO] ${args.join(' ')}\n`);
+  };
+}
+
 async function startServer() {
   const server = new M365CoreServer();
 
@@ -261,7 +282,7 @@ async function startServer() {
           'manage_azure_ad_apps',
           'manage_azure_ad_devices',
           'manage_service_principals',
-          'dynamicendpoints m365 assistant',
+          'dynamicendpoints_m365_assistant',
           'search_audit_log',
           'manage_alerts'
         ],
@@ -290,7 +311,7 @@ async function startServer() {
     // Use stdio transport
     const transport = new StdioServerTransport();
     await server.server.connect(transport);
-    console.log('M365 Core MCP Server running on stdio');
+    console.error('M365 Core MCP Server running on stdio');
   }
 }
 
